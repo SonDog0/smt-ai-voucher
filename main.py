@@ -2,6 +2,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
@@ -112,6 +113,23 @@ col_list = [
     "vibration_z_VIBRATION",
 ]
 
+# Define path
+now = datetime.now()
+# xgb , ridge, mlp , svr
+model_name = "mlp"
+dtype = "N-N"
+is_cross = False
+
+default_path = os.getcwd()  # /home/aiteam/son/pycharm
+result_path = default_path + "/result"  # /home/aiteam/son/pycharm/result
+dir_name_ymd = now.strftime("%Y%m%d%H%M")[2:]  # 2201171200
+dir_name = (
+    result_path + "/" + dir_name_ymd + "/" + model_name
+)  # # /home/aiteam/son/pycharm/result/220117/xgb
+
+# make directory by Y-M-d
+Path(dir_name).mkdir(parents=True, exist_ok=True)
+
 
 def evaluation(y_hat, predictions):
     mae = mean_absolute_error(y_hat, predictions)
@@ -136,11 +154,13 @@ def feature_selection(x, y, k, sf=f_regression):
     return best_feature
 
 
-def make_output_data(result: pd.DataFrame, model, target, path):
-    dir_name = "result/220111/cross_test/data/"
-    file_name = f"SMT_out_{model}_{target}_rfe_std_cross_220113"
-    result.to_csv(dir_name + file_name + ".csv", encoding="CP949", index=False)
-    pass
+def make_output_data(result: pd.DataFrame, model, target, dtype):
+
+    file_name = f"SMT_{dtype}_{model}_{target}.csv"
+
+    result.to_csv(dir_name + "/" + file_name, encoding="CP949", index=False)
+
+    return None
 
 
 def make_output_metric(y_true, y_pred):
@@ -170,22 +190,14 @@ def fix_columns(df: pd.DataFrame):
             "pitch_AHRS3",
             "yaw_AHRS2",
             "yaw_AHRS3",
-            "xacc_RAW_IMU",
             "xacc_SCALED_IMU2",
-            "yacc_RAW_IMU",
             "yacc_SCALED_IMU2",
-            "zacc_RAW_IMU",
             "zacc_SCALED_IMU2",
-            "xgyro_RAW_IMU",
             "xgyro_SCALED_IMU2",
             "ygyro_SCALED_IMU2",
-            "zgyro_RAW_IMU",
             "zgyro_SCALED_IMU2",
-            "xmag_RAW_IMU",
             "xmag_SCALED_IMU2",
-            "ymag_RAW_IMU",
             "ymag_SCALED_IMU2",
-            "zmag_RAW_IMU",
             "zmag_SCALED_IMU2",
         ],
         inplace=True,
@@ -220,8 +232,7 @@ def modeling(
             raise ValueError("check model name")
 
     except ValueError:
-        print('ERROR!, check model name')
-
+        print("ERROR!, check model name")
 
     """hyperparamerter tuning
     https://dining-developer.tistory.com/4
@@ -232,7 +243,18 @@ def modeling(
     N-N(8:2) 
     N-F(ALL:ALL)
     """
+
     if is_cross == False:
+
+        if X_train["servo5_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X_train.drop("servo5_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X_train["servo6_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X_train.drop("servo6_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X_train["servo7_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X_train.drop("servo7_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X_train["servo8_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X_train.drop("servo8_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+
         # split
         train_x, test_x, train_y, test_y = train_test_split(
             X_train, y_train, test_size=0.2, random_state=42
@@ -245,6 +267,20 @@ def modeling(
         result = test_x.copy()
 
     elif is_cross == True:
+
+        if X["servo5_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X.drop("servo5_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+            X_train.drop("servo5_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X["servo6_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X.drop("servo6_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+            X_train.drop("servo6_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X["servo7_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X.drop("servo7_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+            X_train.drop("servo7_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if X["servo8_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            X.drop("servo8_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+            X_train.drop("servo8_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+
         # fitting by raw dataset
         model.fit(X_train, y_train)
 
@@ -260,20 +296,13 @@ def modeling(
 
 if __name__ == "__main__":
 
-    model = "xgb"
-    default_path = os.getcwd()  # /home/aiteam/son/pycharm
-    result_path = default_path + '/result'
-
-    sys.exit(0)
-
     output_metric = pd.DataFrame(columns=["TARGET", "MAE", "MSE", "RMSE", "R_SQUARE"])
     dicts = {}
 
-    for tg in target_list:
+    for target in target_list:
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"TARGET:{tg}, Start at {current_time}")
-        target = tg
+        print(f"TARGET:{target}, Start at {current_time}")
 
         # read_csv
         df = pd.read_csv("/home/aiteam/son/AI-voucher-Smatii/data/normal_dataset.csv")
@@ -281,12 +310,20 @@ if __name__ == "__main__":
             "/home/aiteam/son/AI-voucher-Smatii/data/outlier_dataset.csv"
         )
 
+        # set column
         df = df[col_list]
         df = fix_columns(df)
         df_cross = df_cross[col_list]
         df_cross = fix_columns(df_cross)
 
-        # make dataset
+        # set row, only hexa drone
+        df = df[df["servo5_raw_SERVO_OUTPUT_RAW"] != 0]
+        df = df[df["servo6_raw_SERVO_OUTPUT_RAW"] != 0]
+
+        df_cross = df_cross[df_cross["servo5_raw_SERVO_OUTPUT_RAW"] != 0]
+        df_cross = df_cross[df_cross["servo6_raw_SERVO_OUTPUT_RAW"] != 0]
+
+        # make dataset X, y
         x = df.drop(target, axis=1)
         y = df[target]
         x_cross = df_cross.drop(target, axis=1)
@@ -308,12 +345,12 @@ if __name__ == "__main__":
             y_train=y,
             X=scaled_x_cross,
             y=y_cross,
-            is_cross=False,
-            which_model="ridge",
+            is_cross=is_cross,
+            which_model=model_name,
         )
 
         # make output prediction
-        make_output_data(result, "xgb", target)
+        make_output_data(result=result, model=model_name, target=target, dtype=dtype)
 
         # eval & make output eval
         mae, mse, rmse, r2 = evaluation(y_true, y_pred)
@@ -323,10 +360,9 @@ if __name__ == "__main__":
         output_metric = output_metric.append(dicts, True)
         print(output_metric)
 
-        pass
-
+    prediction_file_name = f"SMT_{dtype}_{model_name}_prediction.csv"
     output_metric.to_csv(
-        "result/220111/cross_test/prediction/SMT_out_XGB_prediction_rfe_std_cross_220113.csv",
+        dir_name + "/" + prediction_file_name,
         encoding="CP949",
         index=False,
     )
