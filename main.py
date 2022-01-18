@@ -37,6 +37,7 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_percentage_error
 
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Ridge
@@ -113,13 +114,22 @@ col_list = [
     "vibration_z_VIBRATION",
 ]
 
+# TODO get parameter from script & automatical running
 # Define path
 now = datetime.now()
 # xgb , ridge, mlp , svr
-model_name = "mlp"
-dtype = "N-N"
-is_cross = False
+model_name = "svr"
+dtype = "N-F"
+is_cross = True
 
+y_true = [3, -0.5, 2, 7]
+y_pred = [2.5, 0.0, 2, 8]
+
+result = mean_absolute_percentage_error(y_true , y_pred)
+
+print(result)
+
+sys.exit(0)
 default_path = os.getcwd()  # /home/aiteam/son/pycharm
 result_path = default_path + "/result"  # /home/aiteam/son/pycharm/result
 dir_name_ymd = now.strftime("%Y%m%d%H%M")[2:]  # 2201171200
@@ -132,6 +142,7 @@ Path(dir_name).mkdir(parents=True, exist_ok=True)
 
 
 def evaluation(y_hat, predictions):
+    mape = mean_absolute_percentage_error(y_hat , predictions)
     mae = mean_absolute_error(y_hat, predictions)
     mse = mean_squared_error(y_hat, predictions)
     rmse = np.sqrt(mean_squared_error(y_hat, predictions))
@@ -229,7 +240,7 @@ def modeling(
             model = SVR()
 
         else:
-            raise ValueError("check model name")
+            raise ValueError()
 
     except ValueError:
         print("ERROR!, check model name")
