@@ -3,6 +3,7 @@
 import os
 import sys
 from pathlib import Path
+import pickle
 
 import pandas as pd
 import numpy as np
@@ -37,7 +38,6 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
-from sklearn.metrics import mean_absolute_percentage_error
 
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Ridge
@@ -119,17 +119,11 @@ col_list = [
 now = datetime.now()
 # xgb , ridge, mlp , svr
 model_name = "svr"
-dtype = "N-F"
-is_cross = True
+dtype = "N-N"
 
-y_true = [3, -0.5, 2, 7]
-y_pred = [2.5, 0.0, 2, 8]
+is_cross = False
 
-result = mean_absolute_percentage_error(y_true , y_pred)
 
-print(result)
-
-sys.exit(0)
 default_path = os.getcwd()  # /home/aiteam/son/pycharm
 result_path = default_path + "/result"  # /home/aiteam/son/pycharm/result
 dir_name_ymd = now.strftime("%Y%m%d%H%M")[2:]  # 2201171200
@@ -140,6 +134,11 @@ dir_name = (
 # make directory by Y-M-d
 Path(dir_name).mkdir(parents=True, exist_ok=True)
 
+# custom MAPE
+def mean_absolute_percentage_error(y_true, y_pred):
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
 
 def evaluation(y_hat, predictions):
     mape = mean_absolute_percentage_error(y_hat , predictions)
@@ -147,7 +146,7 @@ def evaluation(y_hat, predictions):
     mse = mean_squared_error(y_hat, predictions)
     rmse = np.sqrt(mean_squared_error(y_hat, predictions))
     r_squared = r2_score(y_hat, predictions)
-    return mae, mse, rmse, r_squared
+    return mape, mae, mse, rmse, r_squared
 
 
 def feature_selection(x, y, k, sf=f_regression):
@@ -175,7 +174,7 @@ def make_output_data(result: pd.DataFrame, model, target, dtype):
 
 
 def make_output_metric(y_true, y_pred):
-    mae, mse, rmse, r2 = evaluation(y_true, y_pred)
+    mape , mae, mse, rmse, r2 = evaluation(y_true, y_pred)
     return
 
 
@@ -217,6 +216,83 @@ def fix_columns(df: pd.DataFrame):
 
     return df
 
+def clf_modeling(
+    which_model,
+    normal_x,
+    normal_y,
+    fault_x,
+    fault_y
+):
+    try:
+        if which_model == "xgb":
+            model = xgboost.XGBClassifier()
+        else:
+            raise ValueError()
+
+    except ValueError:
+        print("ERROR!, check model name")
+
+
+    # 합쳐
+    X = pd.concat([normal_x, fault_x]).reset_index()
+    X = X.drop('index', axis=1)
+    y = pd.concat([normal_y, fault_y], keys=[0,1])
+    y = y.reset_index(level=1 , drop=True).reset_index()
+    y.rename(columns={'index' : 'label'} , inplace = True)
+
+
+    X['roll_ATTITUDE'] = y['roll_ATTITUDE']
+    X['label'] = y['label']
+
+    x_data = X.drop('label' , axis=1)
+    y_data = X['label']
+
+    train_X, test_X, train_y, test_y = train_test_split(
+        x_data, y_data, test_size=0.2, random_state=42
+    )
+
+    print(y_data)
+    # # oversampling
+    # print(X_train)
+    # print(y_train)
+
+    from imblearn.over_sampling import SMOTE
+    smote = SMOTE(random_state=0)
+    X_train_over, y_train_over = smote.fit_sample(train_X, train_y)
+
+
+    #
+    # print('SMOTE 적용 전 학습용 피처/레이블 데이터 세트: ', X_train.shape, y_train.shape)
+    # print('SMOTE 적용 후 학습용 피처/레이블 데이터 세트: ', X_train_over.shape, y_train_over.shape)
+    # print('SMOTE 적용 후 레이블 값 분포: \n', pd.Series(y_train_over).value_counts())
+    #
+
+    # modeling
+
+    model.fit(X_train_over , y_train_over)
+
+    y_pred = model.predict(test_X)
+
+    print('Precision Score : {}'.format(precision_score(y_pred, test_y)))
+    print('Recall Score : {}'.format(recall_score(y_pred, test_y)))
+    print('Accuracy Score : {}'.format(accuracy_score(y_pred, test_y)))
+    print('F1 Score : {}'.format(f1_score(y_pred, test_y)))
+
+    r = pd.DataFrame()
+    r['y_true'] = test_y
+    r['y_pred'] = y_pred
+
+
+    pickle.dump(model, open('220119model_2', 'wb'))
+
+
+
+    sys.exit(0)
+
+    # eval
+
+
+
 
 def modeling(
     which_model,
@@ -238,6 +314,10 @@ def modeling(
 
         elif which_model == "svr":
             model = SVR()
+
+        elif which_model == "xgb_c":
+            model = xgboost.XGBClassifier()
+            is_cross = True
 
         else:
             raise ValueError()
@@ -307,7 +387,7 @@ def modeling(
 
 if __name__ == "__main__":
 
-    output_metric = pd.DataFrame(columns=["TARGET", "MAE", "MSE", "RMSE", "R_SQUARE"])
+    output_metric = pd.DataFrame(columns=["TARGET", "MAPE", "MAE", "MSE", "RMSE", "R_SQUARE"])
     dicts = {}
 
     for target in target_list:
@@ -350,6 +430,9 @@ if __name__ == "__main__":
             std_scaler.transform(x_cross), columns=x_cross.columns
         )
 
+        clf_modeling(which_model='xgb' , normal_x=scaled_x , normal_y=y , fault_x=scaled_x_cross , fault_y=y_cross)
+
+
         # run model
         result, y_true, y_pred = modeling(
             X_train=scaled_x,
@@ -364,9 +447,9 @@ if __name__ == "__main__":
         make_output_data(result=result, model=model_name, target=target, dtype=dtype)
 
         # eval & make output eval
-        mae, mse, rmse, r2 = evaluation(y_true, y_pred)
+        mape, mae, mse, rmse, r2 = evaluation(y_true, y_pred)
         dicts.update(
-            {"TARGET": target, "MAE": mae, "MSE": mse, "RMSE": rmse, "R_SQUARE": r2}
+            {"TARGET": target, "MAPE" : mape , "MAE": mae, "MSE": mse, "RMSE": rmse, "R_SQUARE": r2}
         )
         output_metric = output_metric.append(dicts, True)
         print(output_metric)
