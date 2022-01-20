@@ -18,6 +18,13 @@ def fix_columns(df: pd.DataFrame):
 
     df.drop(
         [
+            "pitch_ATTITUDE",
+            "yaw_ATTITUDE",
+            "xacc_RAW_IMU",
+            "yacc_RAW_IMU",
+            "zacc_RAW_IMU",
+            "xgyro_RAW_IMU",
+            "ygyro_RAW_IMU",
             "roll_AHRS2",
             "roll_AHRS3",
             "pitch_AHRS2",
@@ -45,16 +52,14 @@ df = fix_columns(df)
 
 print(df)
 
-df = df[['pitch_ATTITUDE', 'yaw_ATTITUDE', 'error_rp_AHRS',
+df = df[[ 'error_rp_AHRS',
        'error_yaw_AHRS', 'omegaIx_AHRS', 'omegaIy_AHRS', 'omegaIz_AHRS',
        'velocity_variance_EKF_STATUS_REPORT',
        'pos_horiz_variance_EKF_STATUS_REPORT',
        'pos_vert_variance_EKF_STATUS_REPORT',
        'compass_variance_EKF_STATUS_REPORT', 'nav_roll_NAV_CONTROLLER_OUTPUT',
        'nav_pitch_NAV_CONTROLLER_OUTPUT', 'xtrack_error_NAV_CONTROLLER_OUTPUT',
-       'aspd_error_NAV_CONTROLLER_OUTPUT', 'xacc_RAW_IMU', 'yacc_RAW_IMU',
-       'zacc_RAW_IMU', 'xgyro_RAW_IMU', 'ygyro_RAW_IMU', 'zgyro_RAW_IMU',
-       'xmag_RAW_IMU', 'ymag_RAW_IMU', 'zmag_RAW_IMU',
+       'aspd_error_NAV_CONTROLLER_OUTPUT',
        'servo1_raw_SERVO_OUTPUT_RAW', 'servo2_raw_SERVO_OUTPUT_RAW',
        'servo3_raw_SERVO_OUTPUT_RAW', 'servo4_raw_SERVO_OUTPUT_RAW',
        'servo5_raw_SERVO_OUTPUT_RAW', 'servo6_raw_SERVO_OUTPUT_RAW',
@@ -64,8 +69,9 @@ df = df[['pitch_ATTITUDE', 'yaw_ATTITUDE', 'error_rp_AHRS',
        'yaw_AHRS_DIFF', 'xacc_IMU_DIFF', 'yacc_IMU_DIFF', 'zacc_IMU_DIFF',
        'xgyro_IMU_DIFF', 'ygyro_IMU_DIFF', 'zgyro_IMU_DIFF', 'xmag_IMU_DIFF',
        'ymag_IMU_DIFF', 'zmag_IMU_DIFF', 'roll_ATTITUDE']]
+
 print(df.columns)
-model = pickle.load(open('220119model_2', 'rb'))
+model = pickle.load(open('220119model_3', 'rb'))
 print(df)
 
 y_pred = model.predict(df)

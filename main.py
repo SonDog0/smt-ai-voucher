@@ -194,6 +194,17 @@ def fix_columns(df: pd.DataFrame):
 
     df.drop(
         [
+            "pitch_ATTITUDE",
+            "yaw_ATTITUDE",
+            "xacc_RAW_IMU",
+            "yacc_RAW_IMU",
+            "zacc_RAW_IMU",
+            "xgyro_RAW_IMU",
+            "ygyro_RAW_IMU",
+            "zgyro_RAW_IMU",
+            "xmag_RAW_IMU",
+            "ymag_RAW_IMU",
+            "zmag_RAW_IMU",
             "roll_AHRS2",
             "roll_AHRS3",
             "pitch_AHRS2",
@@ -283,7 +294,7 @@ def clf_modeling(
     r['y_pred'] = y_pred
 
 
-    pickle.dump(model, open('220119model_2', 'wb'))
+    pickle.dump(model, open('220119model_3', 'wb'))
 
 
 
