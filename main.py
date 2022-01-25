@@ -303,8 +303,6 @@ def clf_modeling(
     # eval
 
 
-
-
 def modeling(
     which_model,
     X_train,
@@ -424,6 +422,29 @@ if __name__ == "__main__":
 
         df_cross = df_cross[df_cross["servo5_raw_SERVO_OUTPUT_RAW"] != 0]
         df_cross = df_cross[df_cross["servo6_raw_SERVO_OUTPUT_RAW"] != 0]
+
+        if df["servo5_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df.drop("servo5_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df["servo6_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df.drop("servo6_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df["servo7_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df.drop("servo7_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df["servo8_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df.drop("servo8_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+
+        if df_cross["servo5_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df_cross.drop("servo5_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df_cross["servo6_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df_cross.drop("servo6_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df_cross["servo7_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df_cross.drop("servo7_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+        if df_cross["servo8_raw_SERVO_OUTPUT_RAW"].sum() == 0:
+            df_cross.drop("servo8_raw_SERVO_OUTPUT_RAW", inplace=True, axis=1)
+
+        df.to_csv('/home/aiteam/son/AI-voucher-Smatii/data/normal_dataset_diff.csv', encoding='CP949' , index =False)
+        df_cross.to_csv('/home/aiteam/son/AI-voucher-Smatii/data/outlier_dataset_diff.csv', encoding='CP949', index=False)
+
+        sys.exit(0)
 
         # make dataset X, y
         x = df.drop(target, axis=1)
