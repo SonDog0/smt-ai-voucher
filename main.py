@@ -194,17 +194,6 @@ def fix_columns(df: pd.DataFrame):
 
     df.drop(
         [
-            "pitch_ATTITUDE",
-            "yaw_ATTITUDE",
-            "xacc_RAW_IMU",
-            "yacc_RAW_IMU",
-            "zacc_RAW_IMU",
-            "xgyro_RAW_IMU",
-            "ygyro_RAW_IMU",
-            "zgyro_RAW_IMU",
-            "xmag_RAW_IMU",
-            "ymag_RAW_IMU",
-            "zmag_RAW_IMU",
             "roll_AHRS2",
             "roll_AHRS3",
             "pitch_AHRS2",
@@ -244,7 +233,7 @@ def clf_modeling(
         print("ERROR!, check model name")
 
 
-    # 합쳐
+
     X = pd.concat([normal_x, fault_x]).reset_index()
     X = X.drop('index', axis=1)
     y = pd.concat([normal_y, fault_y], keys=[0,1])
@@ -419,6 +408,8 @@ if __name__ == "__main__":
         # set row, only hexa drone
         df = df[df["servo5_raw_SERVO_OUTPUT_RAW"] != 0]
         df = df[df["servo6_raw_SERVO_OUTPUT_RAW"] != 0]
+        df = df[df["servo7_raw_SERVO_OUTPUT_RAW"] == 0]
+        df = df[df["servo8_raw_SERVO_OUTPUT_RAW"] == 0]
 
         df_cross = df_cross[df_cross["servo5_raw_SERVO_OUTPUT_RAW"] != 0]
         df_cross = df_cross[df_cross["servo6_raw_SERVO_OUTPUT_RAW"] != 0]
