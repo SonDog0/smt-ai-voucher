@@ -88,7 +88,7 @@ for i in range(10000, int(itter), step):
 
     df_sentimental = review_analysis(slice_df, "review")
     df_sentimental.to_csv(
-        f"./result/bert/review_all_sentimental_analysis_220124_{cnt}.csv",
+        f"./result/bert/review_all_sentimental_analysis_220124_{i}.csv",
         encoding="utf-8-sig",
         index=False,
     )
