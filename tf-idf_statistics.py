@@ -80,6 +80,7 @@ if __name__ == "__main__":
 
     plt.title("kan code heatmap", fontsize=20)
 
+    plt.savefig('kan_code_headmap.png', dpi=400)
 
     plt.show()
 
@@ -121,7 +122,8 @@ if __name__ == "__main__":
 
     print(df)
 
-    sns.heatmap(df, annot=True, fmt="d")
+    svm = sns.heatmap(df, annot=True, fmt="d")
+
 
     plt.title("Annoteat cell with numeric value", fontsize=20)
 
