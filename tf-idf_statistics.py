@@ -66,21 +66,20 @@ def make_heat_map_csv():
 
 if __name__ == "__main__":
     # make_heat_map_csv()
-    plt.close('all')
+    plt.close("all")
     plt.rcParams["figure.figsize"] = [48, 32]
 
-    raw_df = pd.read_csv('heatmap_test_220222.csv')
-
+    raw_df = pd.read_csv("heatmap_test_220222.csv")
 
     df = raw_df.pivot("w1", "w2", "count")
 
     print(df)
 
-    sns.heatmap(df, annot=True, fmt="d" , xticklabels=True, yticklabels=True)
+    sns.heatmap(df, annot=True, fmt="d", xticklabels=True, yticklabels=True)
 
     plt.title("kan code heatmap", fontsize=20)
 
-    plt.savefig('kan_code_headmap.png', dpi=400)
+    plt.savefig("kan_code_headmap.png", dpi=400)
 
     plt.show()
 
@@ -124,10 +123,7 @@ if __name__ == "__main__":
 
     svm = sns.heatmap(df, annot=True, fmt="d")
 
-
     plt.title("Annoteat cell with numeric value", fontsize=20)
-
-
 
     plt.show()
 
