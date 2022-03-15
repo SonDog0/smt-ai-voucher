@@ -133,20 +133,20 @@ def preprocessing_dataframe(df):
     # df["roll_AHRS_DIFF"] = df["roll_AHRS2"] - df["roll_AHRS3"]
     # df["pitch_AHRS_DIFF"] = df["pitch_AHRS2"] - df["pitch_AHRS3"]
     # df["yaw_AHRS_DIFF"] = df["yaw_AHRS2"] - df["yaw_AHRS3"]
-
-    df.drop(
-        [
-            # "roll_AHRS2",
-            # "pitch_AHRS2",
-            # "yaw_AHRS2",
-            # "roll_AHRS3",
-            # "pitch_AHRS3",
-            # "yaw_AHRS3",
-            "type_HEARTBEAT"
-        ],
-        axis=1,
-        inplace=True,
-    )
+    #
+    # df.drop(
+    #     [
+    #         # "roll_AHRS2",
+    #         # "pitch_AHRS2",
+    #         # "yaw_AHRS2",
+    #         # "roll_AHRS3",
+    #         # "pitch_AHRS3",
+    #         # "yaw_AHRS3",
+    #         # "type_HEARTBEAT"
+    #     ],
+    #     axis=1,
+    #     inplace=True,
+    # )
 
     return df
 
@@ -247,8 +247,8 @@ def modeling_XGBoost(train_X , train_y):
     #     'n_estimators': 100
     # }
     #
-    # xgb_clf = XGBClassifier(**params)
-    # xgb_clf.fit(train_X, train_y)
+    # model = XGBClassifier(**params)
+    # model.fit(train_X, train_y)
     #
     # scores = cross_val_score(xgb_clf, train_X, train_y, scoring='f1')
     #
@@ -267,6 +267,31 @@ def modeling_XGBoost(train_X , train_y):
     #
     model = xgboost.XGBClassifier()
 
+    #
+    # from sklearn.tree import DecisionTreeClassifier
+    #
+    # dt = DecisionTreeClassifier()
+    #
+    # from sklearn.model_selection import GridSearchCV
+    #
+    # params = {
+    #     'max_depth': range(1,10),
+    #     'min_samples_leaf': range(1,5),
+    #     'criterion': ["gini", "entropy"]
+    # }
+    #
+    # model = RandomizedSearchCV(
+    #     estimator=dt,
+    #     param_distributions=params,
+    #     cv=3,
+    #     verbose=2,
+    #     random_state=42,
+    #     n_jobs=-1,
+    # )
+    #
+    #
+    model.fit(train_X , train_y)
+
     # from sklearn.svm import SVC
     #
     #
@@ -280,7 +305,7 @@ def modeling_XGBoost(train_X , train_y):
     # model = GridSearchCV(SVC(), param_grid, refit=True, verbose=3)
 
     # fitting the model for grid search
-    model.fit(train_X, train_y)
+    # model.fit(train_X, train_y)
 
 
     # model.fit(train_X , train_y)
@@ -317,23 +342,23 @@ def prediction(model,model_name, test_X, test_y):
 
     y_pred = model.predict(test_X)
 
-    print("Precision Score : {}".format(precision_score(y_pred, test_y)))
-    print("Recall Score : {}".format(recall_score(y_pred, test_y)))
-    print("Accuracy Score : {}".format(accuracy_score(y_pred, test_y)))
-    print("F1 Score : {}".format(f1_score(y_pred, test_y)))
+    print("Precision Score : {}".format(precision_score(test_y, y_pred)))
+    print("Recall Score : {}".format(recall_score(test_y , y_pred)))
+    print("Accuracy Score : {}".format(accuracy_score(test_y, y_pred)))
+    print("F1 Score : {}".format(f1_score( test_y , y_pred)))
 
-    print(confusion_matrix(y_pred, test_y))
+    print(confusion_matrix(test_y, y_pred))
 
-    Precision = precision_score(y_pred, test_y)
-    Recall = recall_score(y_pred, test_y)
-    Accuracy = accuracy_score(y_pred, test_y)
-    F1 = f1_score(y_pred, test_y)
+    Precision = precision_score(test_y, y_pred)
+    Recall = recall_score(test_y, y_pred)
+    Accuracy = accuracy_score(test_y, y_pred)
+    F1 = f1_score(test_y, y_pred)
 
 
     test_X["y_pred"] = y_pred
     test_X["y_true"] = test_y
 
-    test_X.to_csv(f"result/{model_name}_220314.csv")
+    test_X.to_csv(f"result/{model_name}_220314.csv" , index = False)
 
     output_metric = pd.DataFrame(columns=["Precision", "Recall", "Accuracy", "F1"])
 
@@ -410,7 +435,7 @@ if __name__ == "__main__":
     # X = X[result]
 
     # XGB
-    # xgb_model = modeling_XGBoost(X_train_over, y_train_over)
+    xgb_model = modeling_XGBoost(X_train_over, y_train_over)
 
     # selector = RFE(xgb_model, n_features_to_select=10, step=1)
     # selector = selector.fit(train_X, train_y)
@@ -424,7 +449,7 @@ if __name__ == "__main__":
     # print(train_X.columns)
     # print(train_X.columns[filter])
 
-    # prediction(xgb_model, 'xgb', test_X, test_y)
+    prediction(xgb_model, 'xgb', test_X, test_y)
 
     # KNN
     # knn_model = modeling_KNN(X_train_over, y_train_over)
@@ -432,9 +457,9 @@ if __name__ == "__main__":
     # prediction(knn_model, 'knn', test_X, test_y)
 
     # RF
-    rf_model = modeling_randomforest(X_train_over, y_train_over)
+    # rf_model = modeling_randomforest(X_train_over, y_train_over)
 
-    prediction(rf_model, 'randomforest',test_X, test_y)
+    # prediction(rf_model, 'randomforest',test_X, test_y)
 
 
 
