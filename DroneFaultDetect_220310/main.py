@@ -70,9 +70,9 @@ def select_feature(df):
             "roll_AHRS2",
             "pitch_AHRS2",
             "yaw_AHRS2",
-            "roll_AHRS3",
-            "pitch_AHRS3",
-            "yaw_AHRS3",
+            # "roll_AHRS3",
+            # "pitch_AHRS3",
+            # "yaw_AHRS3",
             # # EKF_STATUS_REPORT
             "velocity_variance_EKF_STATUS_REPORT",
             "pos_horiz_variance_EKF_STATUS_REPORT",
@@ -81,7 +81,7 @@ def select_feature(df):
             # NAV_CONTROLLER_OUTPUT
             "xtrack_error_NAV_CONTROLLER_OUTPUT",
             "aspd_error_NAV_CONTROLLER_OUTPUT",
-            # # SERVO_OUTPUT_RAW
+            # SERVO_OUTPUT_RAW
             "servo1_raw_SERVO_OUTPUT_RAW",
             "servo2_raw_SERVO_OUTPUT_RAW",
             "servo3_raw_SERVO_OUTPUT_RAW",
@@ -95,29 +95,29 @@ def select_feature(df):
             # HEARTBEAT
             "type_HEARTBEAT",
             # LABEL
-            "label"
+            "label",
             # IMU
-            # "xacc_RAW_IMU",
-            # "yacc_RAW_IMU",
-            # "zacc_RAW_IMU",
-            # "xgyro_RAW_IMU",
-            # "ygyro_RAW_IMU",
-            # "zgyro_RAW_IMU",
-            # "xmag_RAW_IMU",
-            # "ymag_RAW_IMU",
-            # "zmag_RAW_IMU",
-            # "xacc_SCALED_IMU2",
-            # "yacc_SCALED_IMU2",
-            # "zacc_SCALED_IMU2",
-            # "xgyro_SCALED_IMU2",
-            # "ygyro_SCALED_IMU2",
-            # "zgyro_SCALED_IMU2",
-            # "xmag_SCALED_IMU2",
-            # "ymag_SCALED_IMU2",
-            # "zmag_SCALED_IMU2",
+            "xacc_RAW_IMU",
+            "yacc_RAW_IMU",
+            "zacc_RAW_IMU",
+            "xgyro_RAW_IMU",
+            "ygyro_RAW_IMU",
+            "zgyro_RAW_IMU",
+            "xmag_RAW_IMU",
+            "ymag_RAW_IMU",
+            "zmag_RAW_IMU",
+            "xacc_SCALED_IMU2",
+            "yacc_SCALED_IMU2",
+            "zacc_SCALED_IMU2",
+            "xgyro_SCALED_IMU2",
+            "ygyro_SCALED_IMU2",
+            "zgyro_SCALED_IMU2",
+            "xmag_SCALED_IMU2",
+            "ymag_SCALED_IMU2",
+            "zmag_SCALED_IMU2",
             # SCALED_PRESSURE
-            # "press_abs_SCALED_PRESSURE",
-            # "temperature_SCALED_PRESSURE"
+            "press_abs_SCALED_PRESSURE",
+            "temperature_SCALED_PRESSURE"
 
         ]
     ]
@@ -130,18 +130,18 @@ def preprocessing_dataframe(df):
     df = df[df["type_HEARTBEAT"] == 13]
     # sys.exit(0)
     #
-    df["roll_AHRS_DIFF"] = df["roll_AHRS2"] - df["roll_AHRS3"]
-    df["pitch_AHRS_DIFF"] = df["pitch_AHRS2"] - df["pitch_AHRS3"]
-    df["yaw_AHRS_DIFF"] = df["yaw_AHRS2"] - df["yaw_AHRS3"]
+    # df["roll_AHRS_DIFF"] = df["roll_AHRS2"] - df["roll_AHRS3"]
+    # df["pitch_AHRS_DIFF"] = df["pitch_AHRS2"] - df["pitch_AHRS3"]
+    # df["yaw_AHRS_DIFF"] = df["yaw_AHRS2"] - df["yaw_AHRS3"]
 
     df.drop(
         [
-            "roll_AHRS2",
-            "pitch_AHRS2",
-            "yaw_AHRS2",
-            "roll_AHRS3",
-            "pitch_AHRS3",
-            "yaw_AHRS3",
+            # "roll_AHRS2",
+            # "pitch_AHRS2",
+            # "yaw_AHRS2",
+            # "roll_AHRS3",
+            # "pitch_AHRS3",
+            # "yaw_AHRS3",
             "type_HEARTBEAT"
         ],
         axis=1,
@@ -173,7 +173,7 @@ def oversampling(train_X, train_y):
     # adasyn = ADASYN(random_state=22)
     # X_train_over, y_train_over = adasyn.fit_resample(train_X, train_y)
 
-    smote = SMOTE(random_state=0 , sampling_strategy=0.5)
+    smote = SMOTE(random_state=0)
 
     X_train_over, y_train_over = smote.fit_resample(train_X, train_y)
     print(Counter(y_train_over))
@@ -182,52 +182,54 @@ def oversampling(train_X, train_y):
 
 
 def modeling_randomforest(train_X, train_y):
-
-    # Number of trees in random forest
-    n_estimators = [100]
-    # Number of features to consider at every split
-    max_features = ["auto", "sqrt"]
-    # Maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
-    max_depth.append(None)
-    # Minimum number of samples required to split a node
-    min_samples_split = [2, 5, 10]
-    # Minimum number of samples required at each leaf node
-    min_samples_leaf = [1, 2, 4]
-    # Method of selecting samples for training each tree
-    bootstrap = [True, False]
-
-    random_grid = {
-        "n_estimators": n_estimators,
-        "max_features": max_features,
-        "max_depth": max_depth,
-        "min_samples_split": min_samples_split,
-        "min_samples_leaf": min_samples_leaf,
-        "bootstrap": bootstrap,
-    }
-
-
-
-    # Use the random grid to search for best hyperparameters
-    # First create the base model to tune
-    rf = RandomForestClassifier()
-    # Random search of parameters, using 3 fold cross validation,
-    # search across 100 different combinations, and use all available cores
-    model = RandomizedSearchCV(
-        estimator=rf,
-        param_distributions=random_grid,
-        n_iter=100,
-        cv=3,
-        verbose=2,
-        random_state=42,
-        n_jobs=-1,
-    )
-    # Fit the random search model
-    # model.fit(X_train_over, y_train_over)
-
-    # model = xgboost.XGBClassifier()
-
+    model = RandomForestClassifier()
     model.fit(train_X, train_y)
+
+    # # Number of trees in random forest
+    # n_estimators = [100]
+    # # Number of features to consider at every split
+    # max_features = ["auto", "sqrt"]
+    # # Maximum number of levels in tree
+    # max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
+    # max_depth.append(None)
+    # # Minimum number of samples required to split a node
+    # min_samples_split = [2, 5, 10]
+    # # Minimum number of samples required at each leaf node
+    # min_samples_leaf = [1, 2, 4]
+    # # Method of selecting samples for training each tree
+    # bootstrap = [True, False]
+    #
+    # random_grid = {
+    #     "n_estimators": n_estimators,
+    #     "max_features": max_features,
+    #     "max_depth": max_depth,
+    #     "min_samples_split": min_samples_split,
+    #     "min_samples_leaf": min_samples_leaf,
+    #     "bootstrap": bootstrap,
+    # }
+    #
+    #
+    #
+    # # Use the random grid to search for best hyperparameters
+    # # First create the base model to tune
+    # rf = RandomForestClassifier()
+    # # Random search of parameters, using 3 fold cross validation,
+    # # search across 100 different combinations, and use all available cores
+    # model = RandomizedSearchCV(
+    #     estimator=rf,
+    #     param_distributions=random_grid,
+    #     n_iter=100,
+    #     cv=3,
+    #     verbose=2,
+    #     random_state=42,
+    #     n_jobs=-1,
+    # )
+    # # Fit the random search model
+    # # model.fit(X_train_over, y_train_over)
+    #
+    # # model = xgboost.XGBClassifier()
+    #
+    # model.fit(train_X, train_y)
 
     return model
 
@@ -265,7 +267,23 @@ def modeling_XGBoost(train_X , train_y):
     #
     model = xgboost.XGBClassifier()
 
-    model.fit(train_X , train_y)
+    # from sklearn.svm import SVC
+    #
+    #
+    # from sklearn.model_selection import GridSearchCV
+    #
+    # # defining parameter range
+    # param_grid = {'C': [0.1, 1, 10, 100, 1000],
+    #               'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+    #               'kernel': ['rbf']}
+    #
+    # model = GridSearchCV(SVC(), param_grid, refit=True, verbose=3)
+
+    # fitting the model for grid search
+    model.fit(train_X, train_y)
+
+
+    # model.fit(train_X , train_y)
 
     # from sklearn.model_selection import cross_val_score
     # accuracies = cross_val_score(estimator=xgb_clf, X=train_X, y=train_y, cv=5)
@@ -278,9 +296,6 @@ def modeling_XGBoost(train_X , train_y):
 
 def modeling_KNN(train_X, train_y):
 
-    std_scaler = StandardScaler()
-    std_scaler.fit(train_X)
-    train_x_scaling = std_scaler.transform(train_X)
 
     params = {'n_neighbors': [5, 7, 9],
               'leaf_size': [3],
@@ -290,9 +305,9 @@ def modeling_KNN(train_X, train_y):
 
     knn = KNeighborsClassifier(n_jobs=-1)
 
-    model = RandomizedSearchCV(knn, param_distributions=params, n_jobs=-1, random_state=42, n_iter=100, cv=3)
+    model = RandomizedSearchCV(knn, param_distributions=params, n_jobs=-1, random_state=42, n_iter=10, cv=3)
 
-    model.fit(train_x_scaling, train_y)
+    model.fit(train_X, train_y)
 
     return model
 
@@ -356,44 +371,46 @@ if __name__ == "__main__":
     X = df.drop("label", axis=1)
     y = df["label"]
 
-    # std_scaler = StandardScaler()
-    # std_scaler.fit(X)
-    # x_scale_trans = std_scaler.transform(X)
-    # scaled_x = pd.DataFrame(x_scale_trans, columns=X.columns)
 
-    X, y = make_oversampling_dataset(X,y)
-
-
-
-    # result = feature_selection(X, y, 10)
-
-    # X = X[result]
-
-    # X = X [['yawspeed_ATTITUDE', 'omegaIx_AHRS', 'omegaIy_AHRS', 'omegaIz_AHRS',
-    #    'servo2_raw_SERVO_OUTPUT_RAW']]
-
-    # X = X[['error_yaw_AHRS', 'omegaIx_AHRS', 'omegaIy_AHRS', 'omegaIz_AHRS',
-    #    'xtrack_error_NAV_CONTROLLER_OUTPUT', 'servo2_raw_SERVO_OUTPUT_RAW',
-    #    'servo5_raw_SERVO_OUTPUT_RAW', 'vibration_z_VIBRATION',
-    #    'press_abs_SCALED_PRESSURE', 'temperature_SCALED_PRESSURE']]
-
+    # X, y = make_oversampling_dataset(X,y)
 
     train_X, test_X, train_y, test_y = train_test_split(
-        X, y, test_size=0.3, random_state=42
+        X, y, test_size=0.2, random_state=42
     )
 
-    # train_dataset = train_X.copy()
-    # test_dataset = test_X.copy()
-    #
-    # train_dataset['label'] = train_y
-    # test_dataset['label'] = test_y
-    #
-    # train_dataset.to_csv('training_dataset.csv', index = False)
-    # test_dataset.to_csv('test_dataset.csv' , index = False)
 
+    # 0 : 101260
+    # 1 : 203
+
+    # oversampling
+    from imblearn.over_sampling import SMOTE
+    smote = SMOTE(random_state=0, sampling_strategy=0.5)
+    X_train_over, y_train_over = smote.fit_resample(train_X, train_y)
+
+
+    # make dataset
+    train_dataset = X_train_over.copy()
+    train_dataset['label'] = y_train_over
+    train_dataset.to_csv(
+        'training_dataset.csv' , index = False
+    )
+
+    test_dataset = test_X.copy()
+    test_dataset['label'] = test_y
+    test_dataset.to_csv(
+        'test_dataset.csv' , index = False
+    )
+
+    raw_dataset = pd.concat([train_dataset , test_dataset])
+    raw_dataset.to_csv(
+        'raw_dataset.csv' ,index = False
+    )
+
+    # result = feature_selection(X, y, 5)
+    # X = X[result]
 
     # XGB
-    xgb_model = modeling_XGBoost(train_X, train_y)
+    # xgb_model = modeling_XGBoost(X_train_over, y_train_over)
 
     # selector = RFE(xgb_model, n_features_to_select=10, step=1)
     # selector = selector.fit(train_X, train_y)
@@ -407,17 +424,17 @@ if __name__ == "__main__":
     # print(train_X.columns)
     # print(train_X.columns[filter])
 
-    prediction(xgb_model, 'xgb', test_X, test_y)
+    # prediction(xgb_model, 'xgb', test_X, test_y)
 
     # KNN
     # knn_model = modeling_KNN(X_train_over, y_train_over)
-    #
+    # # #
     # prediction(knn_model, 'knn', test_X, test_y)
 
     # RF
-    # rf_model = modeling_randomforest(train_X, train_y)
-    #
-    # prediction(rf_model, 'randomforest',test_X, test_y)
+    rf_model = modeling_randomforest(X_train_over, y_train_over)
+
+    prediction(rf_model, 'randomforest',test_X, test_y)
 
 
 
